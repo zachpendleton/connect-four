@@ -23,9 +23,23 @@ const DB = {};
 
 // routes
 app.get('/games', function(req, res) {
+  var games = [];
+
+  for (var game in DB) {
+    games.push(gameView(DB[game]));
+  }
+
+  res.send(games);
 });
 
 app.get('/games/:id', function(req, res) {
+  var game = DB[req.params.id];
+
+  if (!game) {
+    return res.send({ error: 'game not found' });
+  }
+
+  return res.send(gameView(game));
 });
 
 app.post('/games', function(req, res) {
