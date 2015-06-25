@@ -141,6 +141,10 @@ app.post('/games/:id/plays', function(req, res) {
     return res.status(400).send({ error: 'game not active' });
   }
 
+  if (typeof col === 'undefined') {
+    game.finish(game.otherPlayer());
+  }
+
   game.responses.push(res);
   if (!playRound(game, col)) { return; }
 

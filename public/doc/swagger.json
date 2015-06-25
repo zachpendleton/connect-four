@@ -1,0 +1,261 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Connect Four. As a service. \n\nTo discuss, join the `#connectfour`channel on Slack.  \n",
+        "version": "1.0.0",
+        "title": "Connect Four"
+    },
+    "host": "connectfour.inseng.net",
+    "basePath": "/",
+    "schemes": [
+        "http"
+    ],
+    "paths": {
+        "/games": {
+            "post": {
+                "tags": [
+                    "game"
+                ],
+                "summary": "Create a new game",
+                "description": "",
+                "operationId": "addGame",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "201": {
+                        "description": "New game created",
+                        "schema": {
+                            "$ref": "#/definitions/Game"
+                        }
+                    }
+                }
+            },
+            "get": {
+                "tags": [
+                    "game"
+                ],
+                "summary": "Fetch all current games",
+                "description": "",
+                "operationId": "allGames",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Game"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/games/{id}": {
+            "get": {
+                "tags": [
+                    "game"
+                ],
+                "summary": "Fetch game by ID.",
+                "operationId": "findGame",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "description": "the unique game id",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Game"
+                        }
+                    },
+                    "404": {
+                        "description": "not found"
+                    }
+                }
+            }
+        },
+        "/games/{id}/players": {
+            "post": {
+                "tags": [
+                    "player"
+                ],
+                "summary": "Add a player to the game",
+                "description": "Each game must have two players, and at least one player must be human. Requests to this endpoint will hang until the second player joins the game.",
+                "operationId": "newPlayer",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "formData",
+                        "name": "name",
+                        "description": "the name of the player",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "formData",
+                        "name": "match",
+                        "description": "if true, match this player with a bot opponent",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "description": "the unique game id",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Game"
+                        }
+                    },
+                    "400": {
+                        "description": "game already in progress"
+                    },
+                    "404": {
+                        "description": "not found"
+                    }
+                }
+            }
+        },
+        "/games/{id}/plays": {
+            "post": {
+                "tags": [
+                    "play"
+                ],
+                "summary": "Make a move in an active game.",
+                "description": "A successful request will hang until the other player has made a play.",
+                "operationId": "newPlay",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "formData",
+                        "name": "col",
+                        "description": "the column to play your token in",
+                        "required": true,
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "description": "the unique game id",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Game"
+                        }
+                    },
+                    "400": {
+                        "description": "game not active or invalid token"
+                    },
+                    "404": {
+                        "description": "game not found"
+                    }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
+            }
+        }
+    },
+    "securityDefinitions": {
+        "api_key": {
+            "type": "apiKey",
+            "name": "X-Token",
+            "in": "header"
+        }
+    },
+    "definitions": {
+        "Player": {
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "example": "kanye"
+                },
+                "_board": {
+                    "type": "integer"
+                },
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "Game": {
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "example": "1"
+                },
+                "_board": {
+                    "type": "integer"
+                },
+                "board": {
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "players": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Player"
+                    }
+                },
+                "state": {
+                    "type": "string",
+                    "example": "active"
+                },
+                "winner": {
+                    "type": "string",
+                    "example": "kanye"
+                }
+            }
+        }
+    }
+}
