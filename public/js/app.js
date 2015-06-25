@@ -30,7 +30,7 @@ var Board = React.createClass({
 
   render: function render() {
     var players = this.players();
-    var board = this.props.game.boardViz;
+    var board = this.props.game.board;
 
     var columns = board.map((function (col, i) {
       var key = ['game', this.props.game.id, 'col', i];

@@ -26,15 +26,29 @@ app.use(express.static('public'));
 // data storage
 const DB = {};
 
-// routes
-app.get('/games', function(req, res) {
+// helpers
+const allGames = function() {
   var games = [];
+  var now = new Date().getTime();
 
   for (var game in DB) {
-    games.push(gameView(DB[game]));
+    games.push(DB[game]);
   }
 
-  res.send(games);
+  games = games.sort(function(a, b) {
+    return a.created > b.created ? -1 : 1;
+  });
+
+  return games.filter(function(game) {
+    return (now - game.created) < 60000;
+  }).map(function(game) {
+    return gameView(game);
+  });
+};
+
+// routes
+app.get('/games', function(req, res) {
+  res.send(allGames());
 });
 
 app.get('/games/:id', function(req, res) {
@@ -51,7 +65,8 @@ app.post('/games', function(req, res) {
   var game    = new Game();
   DB[game.id] = game;
 
-  return res.send(gameView(game));
+  io.emit('games', allGames());
+  res.send(gameView(game));
 });
 
 app.post('/games/:id/players', function(req, res) {
@@ -71,6 +86,7 @@ app.post('/games/:id/players', function(req, res) {
     game.startClock();
   }
 
+  io.emit('games', allGames());
   req.on('close', function() {
     game.finish(game.currentPlayer);
   });
@@ -90,14 +106,24 @@ app.post('/games/:id/plays', function(req, res) {
   }
 
   game.responses.push(res);
-  if (!game.makePlay(col)) { return game.finish(game.otherPlayer()); }
-  if (boardUtil.isWon(game.currentPlayer.board)) { return game.finish(game.currentPlayer); }
-  if (boardUtil.isFull(game.board)) { return game.finish(); }
+  if (!game.makePlay(col)) {
+    game.finish(game.otherPlayer());
+    return io.emit('games', allGames());
+  }
+  if (boardUtil.isWon(game.currentPlayer.board)) {
+    game.finish(game.currentPlayer);
+    return io.emit('games', allGames());
+  }
+  if (boardUtil.isFull(game.board)) {
+    game.finish();
+    return io.emit('games', allGames());
+  }
 
   game.startClock();
   game.currentPlayer = game.otherPlayer();
   game.responses.shift().send(gameView(game));
 
+  io.emit('games', allGames());
   req.on('close', function() {
     game.finish(game.currentPlayer);
   });
