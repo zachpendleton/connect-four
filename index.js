@@ -50,6 +50,25 @@ const notFound = function(res) {
   res.status(404).send({ error: 'not found' });
 };
 
+const playRound = function(game, col) {
+  if (!game.makePlay(col)) {
+    game.finish(game.otherPlayer());
+    io.emit('games', allGames());
+    return false;
+  }
+  if (boardUtil.isWon(game.currentPlayer.board)) {
+    game.finish(game.currentPlayer);
+    io.emit('games', allGames());
+    return false;
+  }
+  if (boardUtil.isFull(game.board)) {
+    game.finish();
+    io.emit('games', allGames());
+    return false;
+  }
+  return true;
+}
+
 // routes
 app.get('/games', function(req, res) {
   res.send(allGames());
@@ -88,6 +107,11 @@ app.post('/games/:id/players', function(req, res) {
   game.players.push(player);
   game.responses.push(res);
 
+  if (req.body.match && game.players.length === 1) {
+    var ai = new Player('bot', 'ai');
+    game.players.push(ai);
+  }
+
   if (game.isFull()) {
     game.start();
     game.responses.shift().send(gameView(game));
@@ -118,21 +142,19 @@ app.post('/games/:id/plays', function(req, res) {
   }
 
   game.responses.push(res);
-  if (!game.makePlay(col)) {
-    game.finish(game.otherPlayer());
-    return io.emit('games', allGames());
-  }
-  if (boardUtil.isWon(game.currentPlayer.board)) {
-    game.finish(game.currentPlayer);
-    return io.emit('games', allGames());
-  }
-  if (boardUtil.isFull(game.board)) {
-    game.finish();
-    return io.emit('games', allGames());
-  }
+  if (!playRound(game, col)) { return; }
 
   game.startClock();
   game.currentPlayer = game.otherPlayer();
+
+  if (!game.currentPlayer.isHuman()) {
+    var moves = boardUtil.availableMoves(game.board);
+    var move = moves[Math.floor(Math.random() * moves.length)];
+    playRound(game, move[0]);
+    game.startClock();
+    game.currentPlayer = game.otherPlayer();
+  }
+
   game.responses.shift().send(gameView(game));
 
   io.emit('games', allGames());
