@@ -1,0 +1,77 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+.gameWrapper {
+    color: #333;
+    float: left;
+    font-family: sans-serif;
+    margin: 16px;
+    width: 282px;
+}
+
+.gameBoard {
+    background: #eee;
+    border: 2px solid #555;
+    border-radius: 3px;
+    overflow: hidden;
+    width: 282px;
+}
+
+.gameBoard__column {
+    float: left;
+    width: 40px;
+}
+
+.token {
+    background: grey;
+    border-radius: 20px;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5);
+    height: 38px;
+    margin: 2px;
+    width: 38px;
+}
+
+.gameBoard .x, .gameBoard .o {
+    box-shadow: inset 0 -1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.gameBoard .x {
+    background: dodgerblue;
+}
+
+.gameBoard .o {
+    background: orangered;
+}
+
+.gameBoard__player {
+    font-weight: bold;
+}
+
+.gameTitle {
+    font-size: 24px;
+    text-align: center;
+}
+
+.gameTitle .x {
+    color: dodgerblue;
+}
+
+.gameTitle .o {
+    color: orangered;
+}
+
+.gameTitle .vs {
+    font-style: italic;
+    margin: 0 8px;
+    font-size: 0.75em;
+}
+
+.winner-x .o {
+    opacity: 0.1;
+}
+
+.winner-o .x {
+    opacity: 0.1;
+}
