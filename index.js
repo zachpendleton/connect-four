@@ -46,6 +46,10 @@ const allGames = function() {
   });
 };
 
+const notFound = function(res) {
+  res.status(404).send({ error: 'not found' });
+};
+
 // routes
 app.get('/games', function(req, res) {
   res.send(allGames());
@@ -55,7 +59,7 @@ app.get('/games/:id', function(req, res) {
   var game = DB[req.params.id];
 
   if (!game) {
-    return res.send({ error: 'game not found' });
+    return notFound(res);
   }
 
   return res.send(gameView(game));
@@ -66,15 +70,19 @@ app.post('/games', function(req, res) {
   DB[game.id] = game;
 
   io.emit('games', allGames());
-  res.send(gameView(game));
+  res.status(201).send(gameView(game));
 });
 
 app.post('/games/:id/players', function(req, res) {
   var game = DB[req.params.id];
   var player = new Player(req.body.name);
 
+  if (!game) {
+    return notFound(res);
+  }
+
   if (game.isFull()) {
-    return res.send({ error: 'game full' });
+    return res.status(400).send({ error: 'game full' });
   }
 
   game.players.push(player);
@@ -96,6 +104,10 @@ app.post('/games/:id/plays', function(req, res) {
   var game = DB[req.params.id];
   var col = req.body.col;
   var token = req.header('X-Token');
+
+  if (!game) {
+    return notFound(res);
+  }
 
   if (token !== game.currentPlayer.token) {
     return res.status(400).send({ error: 'out of turn' });
