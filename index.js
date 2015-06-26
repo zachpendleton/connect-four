@@ -40,7 +40,8 @@ const allGames = function() {
   });
 
   return games.filter(function(game) {
-    return (now - game.created) < 60000;
+    return game.isActive() ||
+      (now - game.created) < (60*1000) * 2
   }).map(function(game) {
     return gameView(game);
   });
